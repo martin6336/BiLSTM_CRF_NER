@@ -169,10 +169,14 @@ class Model(object):
         with tf.variable_scope("crf_loss" if not name else name):
             small = -1000.0
             # pad logits for crf loss
+            # start_logits是除了k个tag之外的开头引入另外一个tag的产物，一句话有100个单词，多加一个单词标记开始这样
             start_logits = tf.concat(
                 [small * tf.ones(shape=[self.batch_size, 1, self.num_tags]), tf.zeros(shape=[self.batch_size, 1, 1])], axis=-1)
+            # pad_logits想要多加一个tag
             pad_logits = tf.cast(small * tf.ones([self.batch_size, self.num_steps, 1]), tf.float32)
+            # 将预测出来的p矩阵和多加一个的拼接起来
             logits = tf.concat([project_logits, pad_logits], axis=-1)
+            # 将句子扩充一个单词
             logits = tf.concat([start_logits, logits], axis=1)
             targets = tf.concat(
                 [tf.cast(self.num_tags*tf.ones([self.batch_size, 1]), tf.int32), self.targets], axis=-1)
